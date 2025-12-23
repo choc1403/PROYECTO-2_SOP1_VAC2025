@@ -1,0 +1,11 @@
+D:\ESCUELA DE VACACIONES\proyecto-2\rust-api\target\debug\deps\convert_case-f22c49c60a2b8f43.d: C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\lib.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\boundary.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\case.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\converter.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\pattern.rs
+
+D:\ESCUELA DE VACACIONES\proyecto-2\rust-api\target\debug\deps\libconvert_case-f22c49c60a2b8f43.rlib: C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\lib.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\boundary.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\case.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\converter.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\pattern.rs
+
+D:\ESCUELA DE VACACIONES\proyecto-2\rust-api\target\debug\deps\libconvert_case-f22c49c60a2b8f43.rmeta: C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\lib.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\boundary.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\case.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\converter.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\pattern.rs
+
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\lib.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\boundary.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\case.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\converter.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\convert_case-0.10.0\src\pattern.rs:

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-api
+  namespace: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-api
+  template:
+    metadata:
+      labels:
+        app: go-api
+    spec:
+      containers:
+      - name: go-api
+        image: zot.local/go-api:latest   # cambia según tu Zot
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+        env:
+        - name: GRPC_SERVER_ADDR
+          value: "go-server:50051"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "300m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-api
+  namespace: backend
+spec:
+  selector:
+    app: go-api
+  ports:
+  - name: http
+    port: 8081
+    targetPort: 8081
+  type: ClusterIP

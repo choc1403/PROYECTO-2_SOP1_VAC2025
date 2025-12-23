@@ -1,0 +1,11 @@
+D:\ESCUELA DE VACACIONES\proyecto-2\rust-api\target\debug\deps\foldhash-60ac50613bb51a6b.d: C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\lib.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\fast.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\quality.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\seed.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\convenience.rs
+
+D:\ESCUELA DE VACACIONES\proyecto-2\rust-api\target\debug\deps\libfoldhash-60ac50613bb51a6b.rlib: C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\lib.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\fast.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\quality.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\seed.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\convenience.rs
+
+D:\ESCUELA DE VACACIONES\proyecto-2\rust-api\target\debug\deps\libfoldhash-60ac50613bb51a6b.rmeta: C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\lib.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\fast.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\quality.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\seed.rs C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\convenience.rs
+
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\lib.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\fast.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\quality.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\seed.rs:
+C:\Users\eloic\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\foldhash-0.1.5\src\convenience.rs:
