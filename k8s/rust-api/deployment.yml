@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: rust-api
-        image: f75c3aab6613.ngrok-free.app/rust-api:latest
+        image: abc-framework-serve-fossil.trycloudflare.com/rust-api:v1
+        
         ports:
         - containerPort: 8080
         env:
@@ -24,9 +25,11 @@ spec:
           value: "http://go-api"
         resources:
           requests:
-            cpu: "100m"
+            cpu: "10m"      # Bajamos de 50m/100m a solo 10m
+            memory: "32Mi"  # Bajamos de 64Mi/128Mi a 32Mi
           limits:
-            cpu: "300m"
+            cpu: "100m"
+            memory: "64Mi"
 
 ---
 apiVersion: v1

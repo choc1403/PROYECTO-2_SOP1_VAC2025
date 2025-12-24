@@ -16,17 +16,17 @@ spec:
     spec:
       containers:
       - name: go-server
-        image: f75c3aab6613.ngrok-free.app/go-server   #  cambia según tu Zot
+        image: abc-framework-serve-fossil.trycloudflare.com/go-server   #  cambia según tu Zot
         imagePullPolicy: Always
         ports:
         - containerPort: 50051
         resources:
           requests:
-            cpu: "50m"
-            memory: "64Mi"
+            cpu: "10m"      # Bajamos de 50m/100m a solo 10m
+            memory: "32Mi"  # Bajamos de 64Mi/128Mi a 32Mi
           limits:
-            cpu: "200m"
-            memory: "128Mi"
+            cpu: "100m"
+            memory: "64Mi"
 
 ---
 apiVersion: v1
