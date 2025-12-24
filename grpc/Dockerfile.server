@@ -1,0 +1,14 @@
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+# Si server.go está en la raíz
+RUN go build -o server server.go
+
+FROM alpine:3.22
+WORKDIR /root/
+COPY --from=builder /app/server .
+CMD ["./server"]

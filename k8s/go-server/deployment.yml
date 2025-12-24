@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: go-server
-  namespace: backend
+  labels:
+    app: go-server
 spec:
   replicas: 1   # luego pruebas con 2 (obligatorio en el proyecto)
   selector:
@@ -15,28 +16,29 @@ spec:
     spec:
       containers:
       - name: go-server
-        image: 068799688bed.ngrok-free.app/go-server:latest   #  cambia según tu Zot
+        image: f75c3aab6613.ngrok-free.app/go-server   #  cambia según tu Zot
         imagePullPolicy: Always
         ports:
         - containerPort: 50051
         resources:
           requests:
-            cpu: "100m"
-            memory: "128Mi"
+            cpu: "50m"
+            memory: "64Mi"
           limits:
-            cpu: "300m"
-            memory: "256Mi"
+            cpu: "200m"
+            memory: "128Mi"
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: go-server
-  namespace: backend
+  labels:
+    app: go-server
 spec:
   selector:
     app: go-server
   ports:
-  - name: grpc
-    port: 50051
+  - port: 50051
     targetPort: 50051
   type: ClusterIP

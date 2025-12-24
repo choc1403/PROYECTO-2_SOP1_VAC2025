@@ -10,10 +10,13 @@ struct Venta {
 }
 
 async fn enviar_a_go(venta: &Venta) -> Result<(), reqwest::Error> {
+    let go_service_url = std::env::var("GO_SERVICE_URL")
+        .unwrap_or_else(|_| "http://localhost:8081".to_string());
+
     let client = reqwest::Client::new();
 
     client
-        .post("http://localhost:8081/procesar")
+        .post(&format!("{}/procesar", go_service_url))
         .json(venta)
         .send()
         .await?;
@@ -35,6 +38,7 @@ async fn recibir_venta(venta: web::Json<Venta>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    println!("Inciando Servidor");
     HttpServer::new(|| {
         App::new()
             .service(recibir_venta) 

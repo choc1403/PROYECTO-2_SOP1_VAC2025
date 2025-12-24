@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rust-api
-  namespace: backend
+  labels:
+    app: rust-api
 spec:
   replicas: 1
   selector:
@@ -15,11 +16,30 @@ spec:
     spec:
       containers:
       - name: rust-api
-        image: 068799688bed.ngrok-free.app/rust-api:latest
+        image: f75c3aab6613.ngrok-free.app/rust-api:latest
         ports:
         - containerPort: 8080
+        env:
+        - name: GO_SERVICE_URL
+          value: "http://go-api"
         resources:
           requests:
             cpu: "100m"
           limits:
             cpu: "300m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rust-api
+  labels:
+    app: rust-api
+spec:
+  selector:
+    app: rust-api
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  
