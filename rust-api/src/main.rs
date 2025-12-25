@@ -1,6 +1,6 @@
 use actix_web::{post, web, App, HttpServer, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
-use std::io::Write;
+
 
 #[derive(Deserialize, Serialize)]
 struct Venta {
@@ -12,7 +12,7 @@ struct Venta {
 
 async fn enviar_a_go(venta: &Venta) -> Result<(), reqwest::Error> {
     let go_service_url = std::env::var("GO_SERVICE_URL")
-        .unwrap_or_else(|_| "http://go-api:8081".to_string());
+        .unwrap_or_else(|_| "http://localhost:8081".to_string());
     
     let client = reqwest::Client::new();
 
@@ -27,6 +27,7 @@ async fn enviar_a_go(venta: &Venta) -> Result<(), reqwest::Error> {
 
 #[post("/venta")]
 async fn recibir_venta(venta: web::Json<Venta>) -> impl Responder {
+    println!("Recibiendo datos");
     if let Err(e) = enviar_a_go(&venta).await {
         eprintln!("Error enviando a Go: {}", e);
         return HttpResponse::InternalServerError().body("Error enviando a Go");
@@ -38,13 +39,12 @@ async fn recibir_venta(venta: web::Json<Venta>) -> impl Responder {
 #[actix_web::main] // Solo una vez
 async fn main() -> std::io::Result<()> {
     println!("Iniciando Servidor en puerto 8080...");
-    std::io::stdout().flush().unwrap(); 
-
     HttpServer::new(|| {
         App::new()
-            .service(recibir_venta)
+            .service(recibir_venta) 
     })
-    .bind("0.0.0.0:8080")?
+    .bind(("0.0.0.0", 8080))?
+    .workers(4)
     .run()
     .await
 }

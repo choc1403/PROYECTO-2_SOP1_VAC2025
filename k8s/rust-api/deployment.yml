@@ -16,13 +16,13 @@ spec:
     spec:
       containers:
       - name: rust-api
-        image: abc-framework-serve-fossil.trycloudflare.com/rust-api:v1
+        image: deluxe-aqua-idol-gradually.trycloudflare.com/rust-api:latest
         
         ports:
         - containerPort: 8080
         env:
         - name: GO_SERVICE_URL
-          value: "http://go-api"
+          value: "http://go-api:8081"
         resources:
           requests:
             cpu: "10m"      # Bajamos de 50m/100m a solo 10m

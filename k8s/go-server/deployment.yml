@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: go-server
-        image: abc-framework-serve-fossil.trycloudflare.com/go-server   #  cambia según tu Zot
+        image: deluxe-aqua-idol-gradually.trycloudflare.com/go-server   #  cambia según tu Zot
         imagePullPolicy: Always
         ports:
         - containerPort: 50051
