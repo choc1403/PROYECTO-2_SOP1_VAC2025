@@ -6,17 +6,15 @@ import (
 	"github.com/IBM/sarama"
 )
 
-var producer sarama.SyncProducer
+var producer sarama.SyncProducer // Variable global para que server.go la vea
 
 func initKafkaProducer(brokers []string) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 
-	p, err := sarama.NewSyncProducer(brokers, config)
+	var err error
+	producer, err = sarama.NewSyncProducer(brokers, config)
 	if err != nil {
-		log.Fatalf("Error creando producer Kafka: %v", err)
+		log.Fatalf("Error creando productor Kafka: %v", err)
 	}
-
-	producer = p
-	log.Println("Kafka Producer inicializado")
 }

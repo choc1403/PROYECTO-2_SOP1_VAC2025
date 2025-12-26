@@ -2,7 +2,7 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: blackfriday
-  namespace: kafka
+  
 spec:
   kafka:
     replicas: 1
@@ -20,3 +20,15 @@ spec:
   entityOperator:
     topicOperator: {}
     userOperator: {}
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ventas-blackfriday
+  
+  labels:
+    strimzi.io/cluster: blackfriday
+spec:
+  partitions: 3
+  replicas: 1

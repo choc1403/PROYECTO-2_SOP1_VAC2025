@@ -6,7 +6,7 @@ RUN go mod download
 
 COPY . .
 # Si server.go está en la raíz
-RUN go build -o server server.go
+RUN go build -o server server.go kafka.go
 
 FROM alpine:3.22
 WORKDIR /root/

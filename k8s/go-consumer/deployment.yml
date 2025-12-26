@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kafka-consumer
-  namespace: backend
+  labels:
+    app: kafka-consumer
 spec:
   replicas: 1
   selector:
