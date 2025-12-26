@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-consumer
+  namespace: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+      - name: kafka-consumer
+        image: zot.local/kafka-consumer:latest
+        env:
+        - name: KAFKA_BROKERS
+          value: "blackfriday-kafka-bootstrap.kafka:9092"
+        resources:
+          requests:
+            cpu: "10m"      # Bajamos de 50m/100m a solo 10m
+            memory: "32Mi"  # Bajamos de 64Mi/128Mi a 32Mi
+          limits:
+            cpu: "100m"
+            memory: "64Mi"

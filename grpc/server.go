@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 
 	pb "grpc/proto"
 
+	"github.com/IBM/sarama"
 	"google.golang.org/grpc"
 )
 
@@ -27,7 +29,20 @@ func (s *server) ProcesarVenta(
 		req.CantidadVendida,
 	)
 
-	// 👉 aquí luego Kafka
+	msg, _ := json.Marshal(req)
+
+	kafkaMsg := &sarama.ProducerMessage{
+		Topic: "ventas-blackfriday",
+		Value: sarama.ByteEncoder(msg),
+	}
+
+	partition, offset, err := producer.SendMessage(kafkaMsg)
+	if err != nil {
+		log.Println("Error enviando a Kafka:", err)
+	} else {
+		log.Printf("Mensaje enviado a Kafka [partition=%d, offset=%d]",
+			partition, offset)
+	}
 
 	return &pb.ProductSaleResponse{
 		Estado: "OK",
@@ -35,6 +50,12 @@ func (s *server) ProcesarVenta(
 }
 
 func main() {
+	brokers := []string{
+		"blackfriday-kafka-bootstrap.kafka:9092",
+	}
+
+	initKafkaProducer(brokers)
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("Error: %v", err)

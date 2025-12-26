@@ -20,6 +20,10 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 50051
+        env:
+        - name: KAFKA_BROKERS
+          value: "blackfriday-kafka-bootstrap.kafka:9092"
+
         resources:
           requests:
             cpu: "10m"      # Bajamos de 50m/100m a solo 10m
