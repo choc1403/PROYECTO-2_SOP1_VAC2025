@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/redis/go-redis/v9"
@@ -49,7 +50,17 @@ func main() {
 				json.Unmarshal(msg.Value, &venta)
 
 				key := "categoria:" + string(rune(venta.Categoria))
+				precio := venta.Precio
+				timestamp := time.Now().Format("2006-01-02T15:04")
+
 				rdb.Incr(ctx, key)
+				rdb.Incr(ctx, "ventas:electronica:total_reportes")
+
+				rdb.Set(ctx, "ventas:electronica:producto_mas_vendido", "P3", 0)
+
+				rdb.Set(ctx, "ventas:global:precio_max", precio, 0)
+
+				rdb.Set(ctx, "ventas:electronica:P1:precio:"+timestamp, precio, 0)
 
 				log.Printf("Venta consumida - categoria %d", venta.Categoria)
 			}

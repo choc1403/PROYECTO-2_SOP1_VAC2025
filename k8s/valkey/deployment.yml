@@ -1,41 +1,55 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
 metadata:
-  name: valkey
-  
+  name: valkey-vm
+  namespace: backend
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: valkey
+  running: true
   template:
     metadata:
       labels:
-        app: valkey
+        app: valkey-vm
     spec:
-      containers:
-      - name: valkey
-        image: valkey/valkey:7
-        ports:
-        - containerPort: 6379
+      domain:
+        cpu:
+          cores: 1
         resources:
           requests:
-            cpu: "100m"
-            memory: "128Mi"
+            memory: 512Mi  # Bajamos de 1Gi a 512Mi
           limits:
-            cpu: "300m"
-            memory: "256Mi"
-
+            memory: 512Mi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+      volumes:
+      - name: rootdisk
+        containerDisk:
+          image: quay.io/containerdisks/ubuntu:22.04
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            package_update: true
+            packages:
+              - valkey
+            runcmd:
+              - systemctl enable valkey
+              - systemctl start valkey
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: valkey
-  
+  namespace: backend
 spec:
   selector:
-    app: valkey
+    app: valkey-vm
   ports:
-  - port: 6379
-    targetPort: 6379
+    - port: 6379
+      targetPort: 6379
   type: ClusterIP

@@ -1,34 +1,41 @@
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: kafka-nodes
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: blackfriday
+spec:
+  replicas: 1
+  roles:        # <--- Corregido de 'role' a 'roles'
+    - controller
+    - broker
+  storage:
+    type: ephemeral
+---
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: blackfriday
-  
+  namespace: kafka
+  annotations:
+    strimzi.io/node-pools: enabled # Indica que use NodePools
+    strimzi.io/kraft: enabled      # Fuerza modo KRaft
 spec:
   kafka:
-    replicas: 1
+    version: 4.0.0 
+    metadataVersion: 4.0-IV1
     listeners:
       - name: plain
         port: 9092
         type: internal
         tls: false
-    storage:
-      type: ephemeral
-  zookeeper:
-    replicas: 1
-    storage:
-      type: ephemeral
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
   entityOperator:
     topicOperator: {}
     userOperator: {}
-
----
-apiVersion: kafka.strimzi.io/v1beta2
-kind: KafkaTopic
-metadata:
-  name: ventas-blackfriday
-  
-  labels:
-    strimzi.io/cluster: blackfriday
-spec:
-  partitions: 3
-  replicas: 1

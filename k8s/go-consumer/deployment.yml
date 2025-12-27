@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kafka-consumer
+  namespace: backend
   labels:
     app: kafka-consumer
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
       - name: kafka-consumer
-        image: zot.local/kafka-consumer:latest
+        image: nuke-lancaster-hotels-eco.trycloudflare.com/kafka-consumer:latest
         env:
         - name: KAFKA_BROKERS
           value: "blackfriday-kafka-bootstrap.kafka:9092"
