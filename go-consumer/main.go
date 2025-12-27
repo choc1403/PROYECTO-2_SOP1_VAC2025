@@ -19,7 +19,23 @@ type Venta struct {
 	CantidadVendida int32   `json:"cantidad_vendida"`
 }
 
+func categoriaToString(c int32) string {
+	switch c {
+	case 1:
+		return "electronica"
+	case 2:
+		return "ropa"
+	case 3:
+		return "hogar"
+	case 4:
+		return "belleza"
+	default:
+		return "desconocida"
+	}
+}
+
 func main() {
+	log.Println("Esperando...")
 	// Kafka
 	brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
 	topic := "ventas-blackfriday"
@@ -35,7 +51,7 @@ func main() {
 
 	// Valkey
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "valkey:6379",
+		Addr: "valkey.backend.svc.cluster.local:6379",
 	})
 
 	ctx := context.Background()
@@ -48,8 +64,9 @@ func main() {
 			for msg := range pc.Messages() {
 				var venta Venta
 				json.Unmarshal(msg.Value, &venta)
+				categoria := categoriaToString(venta.Categoria)
 
-				key := "categoria:" + string(rune(venta.Categoria))
+				key := "categoria:" + categoria
 				precio := venta.Precio
 				timestamp := time.Now().Format("2006-01-02T15:04")
 

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: go-server
-        image: nuke-lancaster-hotels-eco.trycloudflare.com/go-server   #  cambia según tu Zot
+        image: freedom-initially-advocate-suites.trycloudflare.com/go-server   #  cambia según tu Zot
         imagePullPolicy: Always
         ports:
         - containerPort: 50051

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: kafka-consumer
-        image: nuke-lancaster-hotels-eco.trycloudflare.com/kafka-consumer:latest
+        image: freedom-initially-advocate-suites.trycloudflare.com/kafka-consumer:latest
         env:
         - name: KAFKA_BROKERS
           value: "blackfriday-kafka-bootstrap.kafka:9092"

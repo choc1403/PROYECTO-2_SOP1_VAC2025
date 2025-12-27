@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: rust-api
-        image: nuke-lancaster-hotels-eco.trycloudflare.com/rust-api:latest
+        image: freedom-initially-advocate-suites.trycloudflare.com/rust-api:latest
         
         ports:
         - containerPort: 8080
