@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -35,7 +36,14 @@ func categoriaToString(c int32) string {
 }
 
 func main() {
-	log.Println("Esperando...")
+	log.Println("Esperando para procesar...")
+	ctx := context.Background()
+
+	// Configuración de Valkey (Redis)
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "valkey.backend.svc.cluster.local:6379", // Ajusta si es necesario
+	})
+
 	// Kafka
 	brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
 	topic := "ventas-blackfriday"
@@ -49,13 +57,6 @@ func main() {
 	}
 	defer consumer.Close()
 
-	// Valkey
-	rdb := redis.NewClient(&redis.Options{
-		Addr: "valkey.backend.svc.cluster.local:6379",
-	})
-
-	ctx := context.Background()
-
 	partitions, _ := consumer.Partitions(topic)
 	for _, partition := range partitions {
 		pc, _ := consumer.ConsumePartition(topic, partition, sarama.OffsetNewest)
@@ -63,26 +64,63 @@ func main() {
 		go func(pc sarama.PartitionConsumer) {
 			for msg := range pc.Messages() {
 				var venta Venta
-				json.Unmarshal(msg.Value, &venta)
-				categoria := categoriaToString(venta.Categoria)
+				if err := json.Unmarshal(msg.Value, &venta); err != nil {
+					log.Printf("Error decodificando: %v", err)
+					continue
+				}
 
-				key := "categoria:" + categoria
-				precio := venta.Precio
-				timestamp := time.Now().Format("2006-01-02T15:04")
+				catName := categoriaToString(venta.Categoria)
 
-				rdb.Incr(ctx, key)
-				rdb.Incr(ctx, "ventas:electronica:total_reportes")
+				// 1. PRECIO MÁXIMO Y MÍNIMO GLOBAL
+				// Usamos un script de Lua o comparaciones simples
+				actualizarMinMax(ctx, rdb, venta.Precio)
 
-				rdb.Set(ctx, "ventas:electronica:producto_mas_vendido", "P3", 0)
+				// 2. PRODUCTO MÁS/MENOS VENDIDO (GLOBAL Y POR CATEGORÍA)
+				// ZIncrBy suma la cantidad vendida al score del producto
+				rdb.ZIncrBy(ctx, "ranking:global", float64(venta.CantidadVendida), venta.ProductoID)
+				rdb.ZIncrBy(ctx, "ranking:"+catName, float64(venta.CantidadVendida), venta.ProductoID)
 
-				rdb.Set(ctx, "ventas:global:precio_max", precio, 0)
+				// 3. DATOS PARA PRECIO PROMEDIO Y PRODUCTO PROMEDIO
+				// Guardamos la suma acumulada y el conteo para calcular el promedio después
+				rdb.HIncrByFloat(ctx, "stats:precio:suma", catName, venta.Precio)
+				rdb.HIncrByFloat(ctx, "stats:cantidad:suma", catName, float64(venta.CantidadVendida))
+				rdb.HIncrBy(ctx, "stats:conteo", catName, 1)
 
-				rdb.Set(ctx, "ventas:electronica:P1:precio:"+timestamp, precio, 0)
+				// 4. TOTAL DE REPORTES POR CATEGORÍA
+				rdb.Incr(ctx, "reportes:total:"+catName)
 
-				log.Printf("Venta consumida - categoria %d", venta.Categoria)
+				// 5. VARIACIÓN DE PRECIO (SOLO ELECTRÓNICA - TIME SERIES)
+				if catName == "electronica" {
+					timestamp := time.Now().Unix()
+					// Guardamos el precio con el tiempo como Score
+					// Key: history:electronica:P1 (por ejemplo)
+					keyHistorial := fmt.Sprintf("history:electronica:%s", venta.ProductoID)
+					rdb.ZAdd(ctx, keyHistorial, redis.Z{
+						Score:  float64(timestamp),
+						Member: fmt.Sprintf("%f:%d", venta.Precio, timestamp),
+					})
+					// Opcional: Mantener solo los últimos 20 registros para la gráfica
+					rdb.ZRemRangeByRank(ctx, keyHistorial, 0, -21)
+				}
+
+				log.Printf("Procesada venta de %s - Producto: %s", catName, venta.ProductoID)
 			}
 		}(pc)
 	}
 
 	select {}
+}
+
+func actualizarMinMax(ctx context.Context, rdb *redis.Client, precio float64) {
+	// Lógica para el máximo
+	valMax, errMax := rdb.Get(ctx, "ventas:global:precio_max").Float64()
+	if errMax == redis.Nil || precio > valMax {
+		rdb.Set(ctx, "ventas:global:precio_max", precio, 0)
+	}
+
+	// Lógica para el mínimo
+	valMin, errMin := rdb.Get(ctx, "ventas:global:precio_min").Float64()
+	if errMin == redis.Nil || precio < valMin {
+		rdb.Set(ctx, "ventas:global:precio_min", precio, 0)
+	}
 }

@@ -1,0 +1,1083 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "options": {
+        "displayMode": "basic",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "electronica",
+          "hide": true,
+          "keyName": "stats:cantidad:suma",
+          "query": "",
+          "refId": "A",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "electronica",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "B",
+          "type": "command"
+        },
+        {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [
+                  0,
+                  0
+                ],
+                "type": "gt"
+              },
+              "query": {
+                "params": []
+              },
+              "reducer": {
+                "params": [],
+                "type": "last"
+              },
+              "type": "query"
+            }
+          ],
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "downsampler": "mean",
+          "expression": "$A / $B",
+          "hide": false,
+          "refId": "ELECTRONICA",
+          "type": "math",
+          "upsampler": "fillna"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "ropa",
+          "hide": true,
+          "keyName": "stats:cantidad:suma",
+          "query": "",
+          "refId": "D",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "ropa",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "E",
+          "type": "command"
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$E / $D",
+          "hide": false,
+          "refId": "ROPA",
+          "type": "math"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "hogar",
+          "hide": true,
+          "keyName": "stats:cantidad:suma",
+          "query": "",
+          "refId": "G",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "hogar",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "H",
+          "type": "command"
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$G / $H",
+          "hide": false,
+          "refId": "HOGAR",
+          "type": "math"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "belleza",
+          "hide": true,
+          "keyName": "stats:cantidad:suma",
+          "query": "",
+          "refId": "J",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "belleza",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "K",
+          "type": "command"
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$J / $K",
+          "hide": false,
+          "refId": "BELLEZA",
+          "type": "math"
+        }
+      ],
+      "title": "PRODUCTO PROMEDIO POR CATEGORIA",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "get",
+          "datasource": "valkey",
+          "key": "ventas:global:precio_max",
+          "keyName": "ventas:global:precio_max",
+          "query": "",
+          "queryType": "get",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "Precio más alto registrado",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "zrange",
+          "count": 0,
+          "datasource": "valkey",
+          "end": "0",
+          "key": "ventas:global:producto_mas_vendido",
+          "keyName": "ranking:global",
+          "max": "-1",
+          "min": "-1",
+          "query": "",
+          "queryType": "get",
+          "refId": "A",
+          "start": "0",
+          "type": "command",
+          "zrangeQuery": ""
+        }
+      ],
+      "title": "Producto más vendido (Global)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "get",
+          "datasource": "valkey",
+          "key": "ventas:global:precio_min",
+          "keyName": "ventas:global:precio_min",
+          "query": "",
+          "queryType": "get",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "Precio más bajo registrado",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "zrange",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "hide": false,
+          "keyName": "ranking:global",
+          "max": "0",
+          "min": "0",
+          "query": "",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "Producto menos vendido (Global)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "electronica",
+          "hide": true,
+          "keyName": "stats:precio:suma",
+          "query": "",
+          "refId": "A",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "electronica",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "B",
+          "type": "command"
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$A / $B",
+          "hide": false,
+          "refId": "ELECTRONICA",
+          "type": "math"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "hogar",
+          "hide": true,
+          "keyName": "stats:precio:suma",
+          "query": "",
+          "refId": "C",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "hogar",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "D",
+          "type": "command"
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$D / $E",
+          "hide": false,
+          "refId": "HOGAR",
+          "type": "math"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "ropa",
+          "hide": true,
+          "keyName": "stats:precio:suma",
+          "query": "",
+          "refId": "E",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "ropa",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "F",
+          "type": "command"
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$E / $F",
+          "hide": false,
+          "refId": "ROPA",
+          "type": "math"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "belleza",
+          "hide": true,
+          "keyName": "stats:precio:suma",
+          "query": "",
+          "refId": "G",
+          "type": "command"
+        },
+        {
+          "command": "hget",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "field": "belleza",
+          "hide": true,
+          "keyName": "stats:conteo",
+          "query": "",
+          "refId": "H",
+          "type": "command"
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$G / $H",
+          "hide": false,
+          "refId": "BELLEZA",
+          "type": "math"
+        }
+      ],
+      "title": "Precio promedio por categoría",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 6,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "get",
+          "datasource": "valkey",
+          "key": "ventas:electronica:total_reportes",
+          "keyName": "reportes:total:electronica",
+          "query": "",
+          "queryType": "get",
+          "refId": "A",
+          "type": "command"
+        },
+        {
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "hide": false,
+          "keyName": "reportes:total:ropa",
+          "query": "",
+          "refId": "B",
+          "type": "command"
+        },
+        {
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "hide": false,
+          "keyName": "reportes:total:hogar",
+          "query": "",
+          "refId": "C",
+          "type": "command"
+        },
+        {
+          "command": "get",
+          "datasource": {
+            "type": "redis-datasource",
+            "uid": "ef8ekvlan6ewwe"
+          },
+          "hide": false,
+          "keyName": "reportes:total:belleza",
+          "query": "",
+          "refId": "D",
+          "type": "command"
+        }
+      ],
+      "title": "Total de reportes por categoría",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 11,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "# CARNET: 202041390\n# CATEGORIA: ELECTRONICA\n",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.0.0",
+      "title": "ELECTRONICA",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 14
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "zrange",
+          "datasource": "valkey",
+          "hide": false,
+          "key": "ventas:electronica:producto_mas_vendido",
+          "keyName": "ranking:electronica",
+          "max": "-1",
+          "min": "-1",
+          "query": "",
+          "queryType": "get",
+          "refId": "A",
+          "type": "command",
+          "zrangeQuery": ""
+        }
+      ],
+      "title": "Producto más vendido (Electrónica)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "zrange",
+          "datasource": "valkey",
+          "key": "ventas:electronica:producto_menos_vendido",
+          "keyName": "ranking:electronica",
+          "max": "0",
+          "min": "0",
+          "query": "",
+          "queryType": "get",
+          "refId": "A",
+          "type": "command"
+        }
+      ],
+      "title": "Producto menos vendido (Electrónica)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "redis-datasource",
+        "uid": "ef8ekvlan6ewwe"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 9,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "command": "zrange",
+          "datasource": "valkey",
+          "key": "ventas:electronica:P1:precio:*",
+          "keyName": "history:electronica:P1",
+          "max": "-1",
+          "min": "0",
+          "query": "",
+          "queryType": "keys",
+          "refId": "A",
+          "streaming": false,
+          "type": "command"
+        }
+      ],
+      "title": "Variación de precio producto P1 (Electrónica)",
+      "type": "bargauge"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timeRangeUpdatedDuringEditOrView": false,
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Black Friday - Categoría Electrónica",
+  "uid": "blackfriday-electronica",
+  "version": 23,
+  "weekStart": ""
+}
