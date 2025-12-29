@@ -155,7 +155,7 @@ resources:
   limits:
     cpu: "500m"
     memory: "512Mi"
-````
+```
 
 ---
 
@@ -239,9 +239,6 @@ kubectl apply -f kafka-cluster.yml -n kafka
 # Deployments
 # En cada carpeta. /rust-api /go-api /go-server /go-consumer /valkey /grafana
 kubectl apply -f deployment.yml -n backend 
-
-
-
 # HPA
 kubectl apply -f deployment.yml -n backend 
 ```
@@ -1239,6 +1236,1912 @@ Este componente es **altamente escalable** y puede aumentar réplicas para mejor
 
 
 ## 8. Analisis de los archivos yml
+
+
+
+## Análisis del Archivo `ingress.yml` – Kubernetes Ingress
+
+Este archivo define un **recurso Ingress de Kubernetes**, cuyo objetivo es **exponer servicios internos del clúster hacia el exterior**, actuando como **punto de entrada único** para las solicitudes HTTP del sistema.
+
+En esta arquitectura, el Ingress permite que clientes externos (por ejemplo, Locust o usuarios finales) accedan a la **API REST en Rust** sin necesidad de exponer directamente los servicios internos.
+
+El archivo `ingress.yml` cumple un rol fundamental al **exponer de forma controlada la API REST**, permitiendo pruebas de carga y consumo externo sin comprometer la seguridad ni la modularidad del clúster. Su configuración es adecuada para un entorno de pruebas y demuestra el uso correcto de patrones de acceso en Kubernetes.
+
+---
+
+### 1. Información General del Recurso
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+```
+
+* Define un recurso de tipo **Ingress**, estándar en Kubernetes.
+* Permite enrutar tráfico HTTP/HTTPS a servicios internos basándose en reglas.
+
+---
+
+### 2. Metadatos
+
+```yaml
+metadata:
+  name: ingress-proyecto
+  namespace: backend
+```
+
+* **name**: Identificador del Ingress dentro del clúster.
+* **namespace**: `backend`, asegurando que el Ingress opera sobre los servicios del mismo namespace.
+
+---
+
+### 3. Anotaciones del Ingress Controller
+
+```yaml
+annotations:
+  nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  nginx.ingress.kubernetes.io/use-regex: "true"
+```
+
+Estas anotaciones configuran el comportamiento del **NGINX Ingress Controller**.
+
+* **ssl-redirect: "false"**
+
+  * Desactiva la redirección automática de HTTP a HTTPS.
+  * Útil en entornos de laboratorio o pruebas internas.
+
+* **use-regex: "true"**
+
+  * Permite el uso de expresiones regulares en los paths.
+  * Aporta flexibilidad para enrutar múltiples endpoints bajo una misma regla.
+
+---
+
+### 4. Clase de Ingress
+
+```yaml
+spec:
+  ingressClassName: nginx
+```
+
+* Indica que este Ingress será gestionado por el **NGINX Ingress Controller**.
+* Es importante cuando existen múltiples controladores en el clúster.
+
+---
+
+### 5. Reglas de Enrutamiento
+
+```yaml
+rules:
+- http:
+    paths:
+    - path: /venta
+      pathType: Prefix
+```
+
+* Define reglas de enrutamiento HTTP.
+* **path: /venta**
+
+  * Todas las solicitudes que comiencen con `/venta` serán procesadas por esta regla.
+* **pathType: Prefix**
+
+  * Coincide con `/venta` y cualquier subruta (por ejemplo, `/venta/123`).
+
+---
+
+### 6. Backend del Ingress
+
+```yaml
+backend:
+  service:
+    name: rust-api
+    port:
+      number: 8080
+```
+
+* **service.name**: `rust-api`
+
+  * Nombre del Service de Kubernetes que expone la API REST en Rust.
+* **port.number**: `8080`
+
+  * Puerto del Service al cual se redirige el tráfico.
+
+Este backend permite que el Ingress:
+
+* Reciba tráfico externo.
+* Lo reenvíe internamente al servicio correcto.
+* Mantenga desacoplada la infraestructura interna del acceso externo.
+
+---
+
+## Rol del Ingress en la Arquitectura
+
+* Actúa como **gateway HTTP** del sistema.
+* Centraliza el acceso externo.
+* Evita exponer múltiples servicios directamente.
+* Facilita balanceo de carga y escalabilidad.
+* Permite integrar herramientas de prueba como Locust.
+
+---
+
+## Flujo del Tráfico
+
+1. Locust o un cliente externo realiza una petición HTTP:
+
+   ```
+   POST /venta
+   ```
+2. El Ingress recibe la solicitud.
+3. Aplica la regla de enrutamiento.
+4. Redirige el tráfico al Service `rust-api`.
+5. La API en Rust procesa la solicitud y continúa el flujo interno.
+
+---
+
+
+
+## Análisis del Archivo `.k8s/rust-api/deployment.yml` – API REST en Rust
+
+Este archivo define los recursos necesarios para desplegar la **API REST escrita en Rust** dentro de Kubernetes. Incluye tanto el **Deployment**, encargado de la gestión de pods, como el **Service**, que permite la comunicación interna dentro del clúster.
+
+Este componente representa la **puerta de entrada principal del sistema**, expuesta al exterior mediante el Ingress.
+
+El archivo `./k8s/rust-api/deployment.yml` define correctamente un **microservicio ligero, desacoplado y preparado para Kubernetes**, con una configuración eficiente de recursos y comunicación interna segura. Su integración con Ingress, Service y HPA demuestra el uso adecuado de patrones cloud-native.
+
+---
+
+## 1. Deployment de la API REST en Rust
+
+### 1.1 Información General
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+```
+
+* Define un **Deployment**, recurso encargado de:
+
+  * Crear y mantener los pods.
+  * Garantizar alta disponibilidad.
+  * Permitir escalado horizontal.
+
+---
+
+### 1.2 Metadatos
+
+```yaml
+metadata:
+  name: rust-api
+  namespace: backend
+  labels:
+    app: rust-api
+```
+
+* **name**: Identifica el Deployment.
+* **namespace**: `backend`, alineado con el resto de componentes.
+* **labels**: Se utilizan para:
+
+  * Selección de pods.
+  * Asociación con Services y HPA.
+
+---
+
+### 1.3 Configuración de Réplicas y Selector
+
+```yaml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rust-api
+```
+
+* **replicas: 1**
+
+  * En estado inicial se utiliza una sola réplica.
+  * El escalado se gestiona dinámicamente mediante HPA.
+* **selector**
+
+  * Asegura que el Deployment administre únicamente los pods con la etiqueta correcta.
+
+---
+
+### 1.4 Template del Pod
+
+```yaml
+template:
+  metadata:
+    labels:
+      app: rust-api
+```
+
+* Define las etiquetas que heredarán los pods.
+* Estas etiquetas son usadas por el Service y el Ingress.
+
+---
+
+### 1.5 Contenedor de la API
+
+```yaml
+containers:
+- name: rust-api
+  image: freedom-initially-advocate-suites.trycloudflare.com/rust-api:latest
+```
+
+* **image**:
+
+  * Imagen Docker alojada en un registry expuesto mediante **Cloudflare Tunnel**.
+  * Se utiliza HTTPS para permitir el `pull` seguro desde Kubernetes.
+
+Este enfoque resolvió problemas previos con registries expuestos solo por HTTP.
+
+---
+
+### 1.6 Puertos Expuestos
+
+```yaml
+ports:
+- containerPort: 8080
+```
+
+* Puerto interno del contenedor donde escucha la API REST.
+* Coincide con el puerto configurado en Actix Web.
+
+---
+
+### 1.7 Variables de Entorno
+
+```yaml
+env:
+- name: GO_SERVICE_URL
+  value: "http://go-api:8081"
+```
+
+* Permite desacoplar la configuración del código.
+* Define la URL del servicio Go (gRPC Client).
+* Utiliza el **DNS interno de Kubernetes** (`go-api`) para la comunicación entre servicios.
+
+---
+
+### 1.8 Recursos (Requests y Limits)
+
+```yaml
+resources:
+  requests:
+    cpu: "10m"
+    memory: "32Mi"
+  limits:
+    cpu: "100m"
+    memory: "64Mi"
+```
+
+#### Requests
+
+* **CPU: 10m**
+* **Memoria: 32Mi**
+
+Indican los recursos mínimos requeridos para ejecutar el contenedor.
+Valores bajos permiten:
+
+* Mayor densidad de pods.
+* Uso eficiente del clúster.
+
+#### Limits
+
+* **CPU: 100m**
+* **Memoria: 64Mi**
+
+Evitan que el contenedor consuma recursos en exceso, protegiendo la estabilidad del clúster.
+
+> Estos valores son adecuados para una API ligera y stateless, y funcionan correctamente con HPA.
+
+---
+
+## 2. Service de la API REST en Rust
+
+### 2.1 Definición del Service
+
+```yaml
+apiVersion: v1
+kind: Service
+```
+
+* Define un **Service de Kubernetes**.
+* Permite exponer el Deployment internamente.
+
+---
+
+### 2.2 Metadatos
+
+```yaml
+metadata:
+  name: rust-api
+  namespace: backend
+```
+
+* El nombre coincide con el Deployment.
+* Facilita la resolución DNS interna (`rust-api.backend.svc.cluster.local`).
+
+---
+
+### 2.3 Selector y Puertos
+
+```yaml
+spec:
+  selector:
+    app: rust-api
+```
+
+* Asocia el Service con los pods del Deployment.
+
+```yaml
+ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+```
+
+* **port**: Puerto expuesto por el Service.
+* **targetPort**: Puerto del contenedor.
+
+---
+
+### 2.4 Tipo de Service
+
+```yaml
+type: ClusterIP
+```
+
+* Expone el servicio **solo dentro del clúster**.
+* El acceso externo se realiza exclusivamente a través del Ingress.
+* Mejora la seguridad y el control del tráfico.
+
+---
+
+## Rol del `rust-api` en la Arquitectura
+
+* Punto de entrada REST del sistema.
+* Recibe tráfico desde el Ingress.
+* Reenvía datos al servicio Go.
+* Stateless y escalable.
+* Optimizado para bajo consumo de recursos.
+
+---
+
+
+
+## Análisis del Archivo `.k8s/go-api/deployment.yml` – API Go (gRPC Client)
+
+Este archivo define el despliegue de la **API en Go que actúa como cliente gRPC** dentro del clúster de Kubernetes.
+
+Su función principal es **recibir solicitudes HTTP**, transformarlas al contrato Protobuf y **comunicarse con el gRPC Server**, integrándose así al flujo interno del sistema distribuido.
+
+El archivo `.k8s/go-api/deployment.yml` implementa correctamente una **API intermedia ligera, desacoplada y preparada para Kubernetes**, con una configuración eficiente de recursos y comunicación interna segura. Este servicio es clave para integrar la capa REST con el backend gRPC y Kafka.
+
+---
+
+## 1. Deployment de la API Go
+
+### 1.1 Información General
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+```
+
+* Define un recurso **Deployment**, responsable de:
+
+  * Gestionar el ciclo de vida de los pods.
+  * Mantener el número deseado de réplicas.
+  * Permitir escalabilidad horizontal.
+
+---
+
+### 1.2 Metadatos
+
+```yaml
+metadata:
+  name: go-api
+  namespace: backend
+  labels:
+    app: go-api
+```
+
+* **name**: Identifica el Deployment.
+* **namespace**: `backend`, consistente con el resto del sistema.
+* **labels**: Utilizadas para selección de pods y asociación con Services y HPA.
+
+---
+
+### 1.3 Réplicas y Selector
+
+```yaml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-api
+```
+
+* **replicas: 1**
+
+  * Configuración inicial mínima.
+  * El escalado se controla mediante HPA.
+* **selector**
+
+  * Garantiza que el Deployment gestione únicamente los pods correctos.
+
+---
+
+### 1.4 Template del Pod
+
+```yaml
+template:
+  metadata:
+    labels:
+      app: go-api
+```
+
+* Las etiquetas del pod permiten que el Service enrute correctamente el tráfico.
+
+---
+
+### 1.5 Contenedor `go-api`
+
+```yaml
+containers:
+- name: go-api
+  image: freedom-initially-advocate-suites.trycloudflare.com/go-api:latest
+  imagePullPolicy: Always
+```
+
+* **image**
+
+  * Imagen Docker almacenada en un registry privado expuesto mediante **Cloudflare Tunnel**.
+  * Permite descargas seguras vía HTTPS.
+* **imagePullPolicy: Always**
+
+  * Garantiza que Kubernetes siempre obtenga la versión más reciente de la imagen.
+
+---
+
+### 1.6 Puertos Expuestos
+
+```yaml
+ports:
+- containerPort: 8081
+```
+
+* Puerto donde escucha la API HTTP en Go.
+* Coincide con la configuración del servidor HTTP en el código.
+
+---
+
+### 1.7 Variables de Entorno
+
+```yaml
+env:
+- name: GRPC_SERVER_ADDR
+  value: "go-server:50051"
+```
+
+* Define la dirección del **gRPC Server**.
+* Utiliza DNS interno de Kubernetes.
+* Permite desacoplar configuración del código fuente.
+
+---
+
+### 1.8 Recursos (Requests y Limits)
+
+```yaml
+resources:
+  requests:
+    cpu: "10m"
+    memory: "32Mi"
+  limits:
+    cpu: "100m"
+    memory: "64Mi"
+```
+
+* **Requests**
+
+  * Recursos mínimos requeridos.
+  * Permiten una alta densidad de pods.
+* **Limits**
+
+  * Evitan consumo excesivo.
+  * Protegen la estabilidad del clúster.
+
+Estos valores son adecuados para una API ligera y stateless.
+
+---
+
+## 2. Service de la API Go
+
+### 2.1 Definición del Service
+
+```yaml
+apiVersion: v1
+kind: Service
+```
+
+* Define un **Service de tipo ClusterIP**.
+* Permite exponer la API Go internamente.
+
+---
+
+### 2.2 Metadatos
+
+```yaml
+metadata:
+  name: go-api
+  namespace: backend
+```
+
+* Permite resolución DNS interna:
+
+  ```
+  go-api.backend.svc.cluster.local
+  ```
+
+---
+
+### 2.3 Selector y Puertos
+
+```yaml
+spec:
+  selector:
+    app: go-api
+```
+
+* Asocia el Service con los pods del Deployment.
+
+```yaml
+ports:
+- protocol: TCP
+  port: 8081
+  targetPort: 8081
+```
+
+* Define el puerto del Service y el puerto interno del contenedor.
+
+---
+
+### 2.4 Tipo de Service
+
+```yaml
+type: ClusterIP
+```
+
+* El servicio solo es accesible dentro del clúster.
+* El acceso externo se maneja a través del Ingress (si se requiere).
+
+---
+
+## Rol del `go-api` en la Arquitectura
+
+* Actúa como **adaptador REST → gRPC**.
+* Convierte solicitudes HTTP a llamadas gRPC.
+* Reduce la latencia interna usando Protobuf.
+* Permite comparar REST y gRPC.
+* Stateless y escalable horizontalmente.
+
+---
+
+
+
+## Análisis del Archivo `.k8s/go-server/deployment.yml` – gRPC Server en Go
+
+Este archivo define el despliegue del **servidor gRPC** del sistema, el cual cumple un rol central al **recibir solicitudes desde los clientes gRPC**, procesarlas y **publicar eventos en Kafka**.
+
+Este componente actúa como el **núcleo de la lógica de negocio**, desacoplando las APIs de entrada del sistema de mensajería.
+
+El archivo `.k8s/go-server/deployment.yml` define correctamente un **servidor gRPC centralizado, eficiente y preparado para Kubernetes**, con configuración de recursos optimizada y comunicación interna segura. Su diseño facilita pruebas de escalabilidad y análisis de rendimiento del sistema.
+
+---
+
+## 1. Deployment del gRPC Server
+
+### 1.1 Información General
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+```
+
+* Define un **Deployment**, encargado de:
+
+  * Gestionar el ciclo de vida de los pods.
+  * Mantener el número deseado de réplicas.
+  * Permitir escalabilidad horizontal mediante HPA.
+
+---
+
+### 1.2 Metadatos
+
+```yaml
+metadata:
+  name: go-server
+  namespace: backend
+  labels:
+    app: go-server
+```
+
+* **name**: Identifica el Deployment.
+* **namespace**: `backend`, consistente con el resto del sistema.
+* **labels**: Utilizadas para selección de pods, Services y HPA.
+
+---
+
+### 1.3 Réplicas y Selector
+
+```yaml
+spec:
+  replicas: 1   # luego pruebas con 2 (obligatorio en el proyecto)
+  selector:
+    matchLabels:
+      app: go-server
+```
+
+* **replicas: 1**
+
+  * Configuración inicial mínima.
+  * El proyecto contempla pruebas con múltiples réplicas para evaluar rendimiento.
+* **selector**
+
+  * Asegura que el Deployment administre únicamente los pods correctos.
+
+---
+
+### 1.4 Template del Pod
+
+```yaml
+template:
+  metadata:
+    labels:
+      app: go-server
+```
+
+* Permite que el Service y otros recursos identifiquen los pods del gRPC Server.
+
+---
+
+### 1.5 Contenedor `go-server`
+
+```yaml
+containers:
+- name: go-server
+  image: freedom-initially-advocate-suites.trycloudflare.com/go-server
+  imagePullPolicy: Always
+```
+
+* **image**
+
+  * Imagen Docker alojada en un registry privado expuesto mediante **Cloudflare Tunnel**.
+  * El uso de HTTPS garantiza descargas seguras desde Kubernetes.
+* **imagePullPolicy: Always**
+
+  * Asegura que siempre se use la versión más reciente del servidor gRPC.
+
+---
+
+### 1.6 Puertos Expuestos
+
+```yaml
+ports:
+- containerPort: 50051
+```
+
+* Puerto estándar utilizado por gRPC.
+* Coincide con el listener configurado en el código Go.
+
+---
+
+### 1.7 Variables de Entorno
+
+```yaml
+env:
+- name: KAFKA_BROKERS
+  value: "blackfriday-kafka-bootstrap.kafka:9092"
+```
+
+* Define la dirección del clúster Kafka.
+* Utiliza el **Service interno creado por Strimzi**.
+* Permite desacoplar la configuración del código.
+
+---
+
+### 1.8 Recursos (Requests y Limits)
+
+```yaml
+resources:
+  requests:
+    cpu: "10m"
+    memory: "32Mi"
+  limits:
+    cpu: "100m"
+    memory: "64Mi"
+```
+
+* **Requests**
+
+  * Recursos mínimos necesarios para el funcionamiento.
+  * Permiten una alta densidad de pods.
+* **Limits**
+
+  * Previenen consumo excesivo.
+  * Protegen la estabilidad del clúster.
+
+Estos valores son adecuados para un servicio gRPC ligero y stateless.
+
+---
+
+## 2. Service del gRPC Server
+
+### 2.1 Definición del Service
+
+```yaml
+apiVersion: v1
+kind: Service
+```
+
+* Define un **Service de tipo ClusterIP**.
+* Expone el servidor gRPC internamente dentro del clúster.
+
+---
+
+### 2.2 Metadatos
+
+```yaml
+metadata:
+  name: go-server
+  namespace: backend
+```
+
+* Permite resolución DNS interna:
+
+  ```
+  go-server.backend.svc.cluster.local
+  ```
+
+---
+
+### 2.3 Selector y Puertos
+
+```yaml
+spec:
+  selector:
+    app: go-server
+```
+
+* Asocia el Service con los pods del Deployment.
+
+```yaml
+ports:
+- port: 50051
+  targetPort: 50051
+```
+
+* Define el puerto del Service y el puerto del contenedor.
+
+---
+
+### 2.4 Tipo de Service
+
+```yaml
+type: ClusterIP
+```
+
+* El servicio es accesible únicamente dentro del clúster.
+* El acceso externo se realiza a través de otros componentes (por ejemplo, API Go).
+
+---
+
+## Rol del `go-server` en la Arquitectura
+
+* Recibe solicitudes gRPC desde los clientes.
+* Centraliza la lógica de negocio.
+* Publica eventos en Kafka.
+* Permite desacoplamiento entre productores y consumidores.
+* Escalable horizontalmente para manejar alta concurrencia.
+
+---
+
+
+
+
+## Análisis del Archivo `.k8s/go-consumer/deployment.yml` – Kafka Consumer en Go
+
+Este archivo define el despliegue del **consumidor de Kafka** escrito en Go.
+Su función principal es **leer eventos de ventas desde Kafka**, procesarlos y **almacenarlos en Valkey (Redis)** para su posterior visualización en Grafana.
+
+Este componente cierra el flujo completo del sistema, transformando eventos en **métricas y series de tiempo**.
+
+El archivo `.k8s/go-consumer/deployment.yml` define un **consumidor Kafka robusto, eficiente y bien integrado con Kubernetes**, preparado para manejar flujos de eventos en tiempo real y alimentar sistemas de monitoreo como Grafana.
+
+Su diseño facilita pruebas de carga, análisis de rendimiento y escalabilidad del sistema completo.
+
+
+---
+
+## 1. Deployment del Kafka Consumer
+
+### 1.1 Tipo de Recurso
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+```
+
+* Utiliza un **Deployment** para:
+
+  * Garantizar la ejecución continua del consumidor.
+  * Permitir escalabilidad horizontal (replicas).
+  * Facilitar reinicios automáticos ante fallos.
+
+---
+
+### 1.2 Metadatos
+
+```yaml
+metadata:
+  name: kafka-consumer
+  namespace: backend
+  labels:
+    app: kafka-consumer
+```
+
+* **name**: Identifica al consumidor de Kafka.
+* **namespace**: `backend`, manteniendo coherencia con el sistema.
+* **labels**: Clave para monitoreo, selección y escalamiento.
+
+---
+
+### 1.3 Réplicas y Selector
+
+```yaml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+```
+
+* **replicas: 1**
+
+  * Configuración inicial.
+  * En Kafka, el paralelismo depende del número de **particiones** del tópico.
+* **selector**
+
+  * Asegura que el Deployment controle únicamente sus pods.
+
+> 📌 Nota: Para escalar este consumidor, es necesario que el tópico Kafka tenga múltiples particiones; de lo contrario, las réplicas quedarían ociosas.
+
+---
+
+## 2. Pod Template
+
+### 2.1 Labels del Pod
+
+```yaml
+template:
+  metadata:
+    labels:
+      app: kafka-consumer
+```
+
+* Permite identificar el pod en logs, métricas y debugging.
+
+---
+
+### 2.2 Contenedor `kafka-consumer`
+
+```yaml
+containers:
+- name: kafka-consumer
+  image: guys-dip-sessions-venture.trycloudflare.com/kafka-consumer:latest
+```
+
+* Imagen Docker alojada en un **registry privado** accesible mediante Cloudflare Tunnel.
+* Contiene el consumidor Kafka escrito en Go.
+* `latest` facilita pruebas rápidas durante el desarrollo.
+
+---
+
+### 2.3 Variables de Entorno
+
+```yaml
+env:
+- name: KAFKA_BROKERS
+  value: "blackfriday-kafka-bootstrap.kafka:9092"
+```
+
+* Define el endpoint del clúster Kafka gestionado por **Strimzi**.
+* Permite cambiar brokers sin modificar el código.
+* Usa resolución DNS interna de Kubernetes.
+
+---
+
+### 2.4 Recursos (CPU y Memoria)
+
+```yaml
+resources:
+  requests:
+    cpu: "10m"
+    memory: "32Mi"
+  limits:
+    cpu: "100m"
+    memory: "64Mi"
+```
+
+* **Requests**
+
+  * Recursos mínimos garantizados.
+  * Adecuado para procesamiento ligero de mensajes.
+* **Limits**
+
+  * Previenen consumo excesivo ante picos de carga.
+* Esta configuración permite **alta eficiencia** y bajo costo.
+
+---
+
+## 3. Rol del Kafka Consumer en la Arquitectura
+
+* Consume eventos desde Kafka (`ventas-blackfriday`).
+* Procesa los mensajes (agregaciones, estadísticas, rankings).
+* Persiste métricas en **Valkey**:
+
+  * Precios máximos y mínimos.
+  * Rankings de productos.
+  * Series de tiempo para electrónica.
+* Actúa como puente entre **mensajería** y **visualización**.
+
+---
+
+## 4. Consideraciones de Escalabilidad
+
+* El consumidor es **state-less**, ideal para escalar.
+* Para aumentar throughput:
+
+  * Incrementar el número de particiones en Kafka.
+  * Aumentar el número de réplicas del Deployment.
+* Puede integrarse con un **HPA basado en CPU** o métricas personalizadas.
+
+---
+
+
+## Análisis del Archivo `kafka-cluster.yml` – Clúster Kafka con Strimzi
+
+Este archivo define la **infraestructura de Kafka** dentro de Kubernetes utilizando **Strimzi**, el operador oficial para ejecutar Apache Kafka de forma nativa en clústeres Kubernetes.
+
+La configuración está optimizada para **entornos académicos y de laboratorio**, priorizando simplicidad, bajo consumo de recursos y facilidad de despliegue.
+
+El archivo `kafka-cluster.yml` implementa un **clúster Kafka moderno, ligero y completamente integrado con Kubernetes**, utilizando Strimzi en modo KRaft.
+Es una solución ideal para pruebas de arquitectura distribuida, análisis de rendimiento y flujos de datos en tiempo real.
+
+---
+
+## 1. KafkaNodePool – Definición de Nodos Kafka
+
+### 1.1 Tipo de Recurso
+
+```yaml
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+```
+
+* Introducido en versiones recientes de Strimzi.
+* Permite separar y controlar los **roles de los nodos Kafka** (controller y broker).
+* Reemplaza el modelo monolítico clásico de Kafka.
+
+---
+
+### 1.2 Metadatos
+
+```yaml
+metadata:
+  name: kafka-nodes
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: blackfriday
+```
+
+* **name**: Identificador del pool de nodos.
+* **namespace**: `kafka`, dedicado exclusivamente a la mensajería.
+* **label `strimzi.io/cluster`**: Asocia el NodePool con el clúster Kafka llamado `blackfriday`.
+
+---
+
+### 1.3 Especificación del NodePool
+
+```yaml
+spec:
+  replicas: 1
+```
+
+* Se crea **un único nodo Kafka**.
+* Adecuado para pruebas funcionales y desarrollo.
+* No ofrece tolerancia a fallos (single point of failure).
+
+---
+
+### 1.4 Roles del Nodo
+
+```yaml
+roles:
+  - controller
+  - broker
+```
+
+* **controller**:
+
+  * Gestiona el metadata del clúster.
+  * Reemplaza a ZooKeeper (modo KRaft).
+* **broker**:
+
+  * Almacena y distribuye los mensajes.
+* Ambos roles están combinados en el mismo nodo para simplificar la arquitectura.
+
+---
+
+### 1.5 Almacenamiento
+
+```yaml
+storage:
+  type: ephemeral
+```
+
+* Usa almacenamiento **temporal**.
+* Los datos se pierden si el pod se reinicia.
+* Ideal para pruebas y simulaciones.
+* No recomendado para producción.
+
+---
+
+## 2. Recurso Kafka – Definición del Clúster
+
+### 2.1 Tipo de Recurso
+
+```yaml
+kind: Kafka
+```
+
+* Recurso principal gestionado por Strimzi.
+* Orquesta brokers, listeners, configuración y operadores.
+
+---
+
+### 2.2 Metadatos y Anotaciones
+
+```yaml
+metadata:
+  name: blackfriday
+  namespace: kafka
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+```
+
+* **node-pools: enabled**
+  Indica que el clúster usará `KafkaNodePool`.
+* **kraft: enabled**
+  Activa el modo **KRaft**, eliminando la dependencia de ZooKeeper.
+
+---
+
+## 3. Configuración del Broker Kafka
+
+### 3.1 Versión de Kafka
+
+```yaml
+kafka:
+  version: 4.0.0
+  metadataVersion: 4.0-IV1
+```
+
+* Usa una versión moderna de Kafka.
+* Compatible con KRaft.
+* Asegura mejoras de rendimiento y estabilidad.
+
+---
+
+### 3.2 Listeners
+
+```yaml
+listeners:
+  - name: plain
+    port: 9092
+    type: internal
+    tls: false
+```
+
+* **Listener interno**
+
+  * Solo accesible dentro del clúster Kubernetes.
+* **Sin TLS**
+
+  * Simplifica la conexión para entornos de laboratorio.
+* Puerto estándar `9092`.
+
+---
+
+### 3.3 Configuración de Replicación
+
+```yaml
+config:
+  offsets.topic.replication.factor: 1
+  transaction.state.log.replication.factor: 1
+  transaction.state.log.min.isr: 1
+  default.replication.factor: 1
+  min.insync.replicas: 1
+```
+
+* Todos los factores de replicación están en **1**:
+
+  * Requerido debido a que solo existe un broker.
+* Garantiza funcionamiento sin errores por ISR insuficiente.
+* No ofrece alta disponibilidad, pero sí estabilidad para pruebas.
+
+---
+
+## 4. Entity Operator
+
+```yaml
+entityOperator:
+  topicOperator: {}
+  userOperator: {}
+```
+
+* **Topic Operator**
+
+  * Permite crear y gestionar tópicos vía CRDs.
+* **User Operator**
+
+  * Maneja usuarios y credenciales Kafka.
+* Facilita la administración declarativa de Kafka en Kubernetes.
+
+---
+
+## 5. Rol de Kafka en la Arquitectura del Sistema
+
+Kafka actúa como el **núcleo de desacoplamiento** del sistema:
+
+* Recibe eventos desde el **gRPC Server**.
+* Permite procesamiento asíncrono.
+* Facilita escalabilidad independiente:
+
+  * Productores (APIs).
+  * Consumidores (analytics).
+* Asegura resiliencia frente a picos de tráfico.
+
+---
+
+## 6. Limitaciones de la Configuración
+
+* Un solo nodo (no tolerante a fallos).
+* Almacenamiento efímero.
+* Sin seguridad TLS o autenticación.
+* Diseñada exclusivamente para fines académicos y demostrativos.
+
+---
+
+
+
+## Análisis del Archivo `.k8s/valkey/deployment.yml` – Despliegue de Valkey en Kubernetes
+
+Este archivo define el despliegue de **Valkey**, un fork moderno y de alto rendimiento de Redis, utilizado en el sistema como **almacenamiento en memoria** para métricas, contadores, rankings y series temporales que luego son consumidas por **Grafana**.
+
+Valkey funciona como la **capa de persistencia rápida** del sistema.
+
+El archivo `.k8s/valkey/deployment.yml` implementa una **base de datos en memoria rápida y eficiente**, perfectamente integrada con Kafka y Grafana.
+Su configuración está alineada con los objetivos del proyecto: **análisis en tiempo real, bajo consumo de recursos y simplicidad operativa**.
+
+---
+
+## 1. Deployment de Valkey
+
+### 1.1 Tipo de Recurso
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+```
+
+* Se utiliza un **Deployment** porque:
+
+  * Permite reinicios automáticos del pod.
+  * Facilita escalar réplicas en el futuro.
+  * Es suficiente para una base de datos en entorno académico.
+
+---
+
+### 1.2 Metadatos
+
+```yaml
+metadata:
+  name: valkey
+  namespace: backend
+```
+
+* **name**: Nombre del Deployment (`valkey`).
+* **namespace**: `backend`, donde residen los servicios internos del sistema.
+* Mantiene a Valkey aislado del tráfico externo.
+
+---
+
+### 1.3 Réplicas
+
+```yaml
+spec:
+  replicas: 1
+```
+
+* Se ejecuta **una sola réplica**.
+* Adecuado para:
+
+  * Pruebas funcionales.
+  * Métricas en tiempo real.
+* No existe replicación ni alta disponibilidad, lo cual es aceptable para este proyecto.
+
+---
+
+### 1.4 Selector y Labels
+
+```yaml
+selector:
+  matchLabels:
+    app: valkey
+```
+
+```yaml
+template:
+  metadata:
+    labels:
+      app: valkey
+```
+
+* Garantiza que:
+
+  * El Deployment gestione únicamente los pods con `app: valkey`.
+  * El Service pueda enrutar correctamente el tráfico hacia Valkey.
+
+---
+
+## 2. Contenedor Valkey
+
+### 2.1 Imagen
+
+```yaml
+image: valkey/valkey:7.2
+```
+
+* Imagen oficial de Valkey.
+* Basada en Redis 7.x, compatible con:
+
+  * `GET`, `SET`, `INCR`
+  * `ZADD`, `ZINCRBY`
+  * `HINCRBY`, `HINCRBYFLOAT`
+* Ideal para métricas, rankings y time series simples.
+
+---
+
+### 2.2 Puerto Expuesto
+
+```yaml
+ports:
+  - containerPort: 6379
+```
+
+* Puerto estándar de Redis/Valkey.
+* Usado por:
+
+  * Kafka Consumer (Go)
+  * Grafana Redis Datasource
+
+---
+
+### 2.3 Argumentos de Ejecución
+
+```yaml
+args:
+  - "--bind"
+  - "0.0.0.0"
+  - "--protected-mode"
+  - "no"
+```
+
+#### Explicación:
+
+* `--bind 0.0.0.0`
+
+  * Permite conexiones desde otros pods del clúster.
+* `--protected-mode no`
+
+  * Desactiva el modo protegido.
+  * Necesario para permitir conexiones sin autenticación dentro del clúster.
+
+⚠️ **Nota**:
+Esta configuración **NO es segura para producción**, pero es válida en un entorno controlado de Kubernetes académico.
+
+---
+
+## 3. Service de Valkey
+
+### 3.1 Tipo de Recurso
+
+```yaml
+kind: Service
+```
+
+* Permite exponer Valkey internamente dentro del clúster.
+
+---
+
+### 3.2 Nombre y Namespace
+
+```yaml
+metadata:
+  name: valkey
+  namespace: backend
+```
+
+* El DNS generado es:
+
+```
+valkey.backend.svc.cluster.local
+```
+
+* Utilizado por:
+
+  * Kafka Consumer
+  * Grafana
+  * Pruebas con `redis-cli`
+
+---
+
+### 3.3 Selector
+
+```yaml
+selector:
+  app: valkey
+```
+
+* Enruta el tráfico al pod correcto del Deployment.
+
+---
+
+### 3.4 Puertos
+
+```yaml
+ports:
+  - port: 6379
+    targetPort: 6379
+```
+
+* **port**: Puerto expuesto por el Service.
+* **targetPort**: Puerto interno del contenedor Valkey.
+
+---
+
+### 3.5 Tipo de Service
+
+```yaml
+type: ClusterIP
+```
+
+* Solo accesible **dentro del clúster**.
+* No expone Valkey a internet.
+* Aumenta la seguridad del sistema.
+
+---
+
+## 4. Rol de Valkey en la Arquitectura
+
+Valkey cumple un papel crítico en el sistema:
+
+* 📊 Almacena métricas agregadas:
+
+  * Precio máximo y mínimo.
+  * Total de reportes por categoría.
+* 🏆 Rankings:
+
+  * Productos más vendidos (ZSET).
+* ⏱ Series temporales:
+
+  * Variación de precios en electrónica.
+* 📈 Fuente de datos para Grafana.
+
+Kafka desacopla → Valkey persiste → Grafana visualiza.
+
+---
+
+## 5. Limitaciones del Diseño
+
+* Sin persistencia en disco.
+* Sin autenticación.
+* Una sola réplica.
+* Sin clustering nativo de Valkey.
+
+Estas decisiones fueron tomadas para:
+
+* Reducir complejidad.
+* Facilitar despliegue.
+* Enfocarse en el flujo distribuido completo.
+
+---
+
+
+
+## Análisis del Archivo `.k8s/grafana/deployment.yml` – Visualización y Monitoreo con Grafana
+
+El archivo `.k8s/grafana/deployment.yml` define el despliegue de **Grafana** dentro del clúster de Kubernetes.
+Grafana es la **capa de visualización** del sistema y se utiliza para mostrar métricas procesadas desde **Valkey**, las cuales provienen indirectamente del flujo Kafka → Consumer → Valkey.
+
+El archivo `.k8s/grafana/deployment.yml` implementa correctamente la **capa de visualización del sistema**, integrándose de forma directa con Valkey mediante el plugin Redis Datasource.
+Su configuración es ligera, eficiente y suficiente para demostrar métricas en tiempo real generadas por Kafka y procesadas por consumidores en Go.
+
+---
+
+## 1. Deployment de Grafana
+
+### 1.1 Tipo de Recurso
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+```
+
+* Se utiliza un **Deployment** porque:
+
+  * Grafana es un servicio **sin estado crítico** (stateless para este proyecto).
+  * Permite reinicios automáticos del pod.
+  * Facilita escalar en caso de mayor carga de usuarios.
+
+---
+
+### 1.2 Metadatos
+
+```yaml
+metadata:
+  name: grafana
+  namespace: backend
+```
+
+* **name**: `grafana`, nombre del Deployment.
+* **namespace**: `backend`, coherente con el resto de servicios internos.
+* Mantiene a Grafana separado de componentes de infraestructura como Kafka o Ingress.
+
+---
+
+### 1.3 Réplicas
+
+```yaml
+spec:
+  replicas: 1
+```
+
+* Se ejecuta **una sola réplica**:
+
+  * Suficiente para visualización académica.
+  * Evita conflictos de sesión o sincronización de dashboards.
+* En producción podrían utilizarse múltiples réplicas con almacenamiento persistente.
+
+---
+
+### 1.4 Selector y Labels
+
+```yaml
+selector:
+  matchLabels:
+    app: grafana
+```
+
+```yaml
+template:
+  metadata:
+    labels:
+      app: grafana
+```
+
+* Garantiza que:
+
+  * El Deployment controle únicamente pods de Grafana.
+  * El Service pueda enrutar tráfico correctamente hacia el pod.
+
+---
+
+## 2. Contenedor Grafana
+
+### 2.1 Imagen
+
+```yaml
+image: grafana/grafana:11.0.0
+```
+
+* Imagen oficial de Grafana.
+* Versión moderna con:
+
+  * Soporte estable para plugins.
+  * Mejoras de rendimiento.
+  * Compatibilidad con Redis/Valkey datasource.
+
+---
+
+### 2.2 Puerto Expuesto
+
+```yaml
+ports:
+  - containerPort: 3000
+```
+
+* Puerto por defecto de Grafana.
+* Usado para:
+
+  * Acceso web al dashboard.
+  * Configuración de datasources y paneles.
+
+---
+
+### 2.3 Instalación Automática de Plugins
+
+```yaml
+env:
+  - name: GF_INSTALL_PLUGINS
+    value: redis-datasource
+```
+
+#### Explicación:
+
+* `GF_INSTALL_PLUGINS` permite instalar plugins al iniciar el contenedor.
+* `redis-datasource`:
+
+  * Habilita a Grafana para conectarse a Redis/Valkey.
+  * Permite consultas tipo:
+
+    * `GET ventas:global:precio_max`
+    * `ZREVRANGE ranking:global 0 5 WITHSCORES`
+* Evita instalación manual dentro del pod.
+
+Este paso es **clave** para integrar Grafana con Valkey.
+
+---
+
+## 3. Service de Grafana
+
+### 3.1 Tipo de Recurso
+
+```yaml
+kind: Service
+```
+
+* Permite exponer Grafana dentro del clúster.
+
+---
+
+### 3.2 Nombre y Namespace
+
+```yaml
+metadata:
+  name: grafana
+  namespace: backend
+```
+
+* El DNS interno generado es:
+
+```
+grafana.backend.svc.cluster.local
+```
+
+---
+
+### 3.3 Selector
+
+```yaml
+selector:
+  app: grafana
+```
+
+* Conecta el Service con el pod correcto del Deployment.
+
+---
+
+### 3.4 Puertos
+
+```yaml
+ports:
+  - port: 3000
+    targetPort: 3000
+```
+
+* **port**: Puerto del Service.
+* **targetPort**: Puerto del contenedor Grafana.
+
+---
+
+### 3.5 Tipo de Service
+
+```yaml
+type: ClusterIP
+```
+
+* Grafana solo es accesible **desde dentro del clúster**.
+* El acceso externo normalmente se realiza mediante:
+
+  * `kubectl port-forward`, o
+  * Ingress (si se desea exponer).
+
+Esto mejora la seguridad del sistema.
+
+---
+
+## 4. Rol de Grafana en la Arquitectura
+
+Grafana representa la **última fase del pipeline**:
+
+1. Locust genera tráfico.
+2. Rust API / Go API reciben solicitudes.
+3. gRPC Server envía eventos a Kafka.
+4. Kafka Consumer procesa y agrega métricas.
+5. Valkey almacena datos procesados.
+6. **Grafana consulta Valkey y visualiza resultados**.
+
+
+
+---
+
+
+
+## Análisis del Archivo `.k8s/hpa/deployment.yml` – Autoescalamiento Horizontal (HPA)
+
+El archivo `.k8s/hpa/deployment.yml` define **Horizontal Pod Autoscalers (HPA)** para los principales componentes del sistema.
+
+El HPA permite que Kubernetes **ajuste automáticamente el número de réplicas** de un Deployment en función del uso de recursos, en este caso **CPU**.
+
+Este mecanismo es fundamental para:
+
+* Soportar picos de carga generados por Locust.
+* Mantener estabilidad del sistema.
+* Comparar rendimiento con y sin escalamiento (requisito del proyecto).
+
+
+El archivo `.k8s/hpa/deployment.yml` implementa una **estrategia de autoescalamiento efectiva y bien balanceada**, adaptada a la naturaleza de cada componente.
+Permite demostrar claramente los beneficios de Kubernetes frente a arquitecturas monolíticas, cumpliendo con los objetivos de rendimiento y resiliencia del proyecto.
+
+---
+
+## 1. ¿Qué es un HPA?
+
+Un **Horizontal Pod Autoscaler**:
+
+* Monitorea métricas (CPU, memoria u otras).
+* Aumenta o reduce el número de pods automáticamente.
+* Funciona sobre Deployments, StatefulSets o ReplicaSets.
+
+En este proyecto:
+
+* Se usa **CPU Utilization**.
+* Requiere que cada contenedor tenga definidos `requests.cpu`.
+
+---
+
+## 2. HPA para `rust-api`
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rust-api-hpa
+  namespace: backend
+```
+
+### Objetivo
+
+```yaml
+scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: rust-api
+```
+
+* Aplica directamente al Deployment `rust-api`.
+* Escala la API REST escrita en Rust, que es el **primer punto de entrada** del sistema.
+
+### Límites de escalamiento
+
+```yaml
+minReplicas: 1
+maxReplicas: 3
+```
+
+* Mínimo: 1 pod (siempre disponible).
+* Máximo: 3 pods.
+* Adecuado para una API liviana y altamente eficiente como Rust.
+
+### Métrica usada
+
+```yaml
+metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 65
+```
+
+* Si el uso promedio de CPU supera el **65%**, Kubernetes crea nuevos pods.
+* Rust maneja bien la concurrencia, por eso el umbral es moderado.
+
+---
+
+## 3. HPA para `go-server` (gRPC Server)
+
+```yaml
+metadata:
+  name: go-server-hpa
+```
+
+### Función del servicio
+
+* Recibe llamadas gRPC.
+* Publica mensajes a Kafka.
+* Es un componente **crítico del pipeline**.
+
+### Configuración
+
+```yaml
+minReplicas: 1
+maxReplicas: 3
+```
+
+* Se permite mayor escalamiento que Rust.
+* gRPC Server puede manejar múltiples conexiones concurrentes.
+
+### Umbral de CPU
+
+```yaml
+averageUtilization: 70
+```
+
+* Se tolera mayor uso de CPU antes de escalar.
+* Kafka I/O suele ser más bloqueante que computacional.
+
+---
+
+## 4. HPA para `go-api` (gRPC Client)
+
+```yaml
+metadata:
+  name: go-api-hpa
+```
+
+### Rol del servicio
+
+* Actúa como **puente REST → gRPC**.
+* Convierte peticiones HTTP en llamadas gRPC.
+
+### Configuración
+
+```yaml
+minReplicas: 1
+maxReplicas: 3
+averageUtilization: 65
+```
+
+* Escala rápidamente cuando aumentan peticiones HTTP.
+* Similar comportamiento a `rust-api`, pero con más lógica interna.
+
+---
+
+## 5. HPA para `kafka-consumer`
+
+```yaml
+metadata:
+  name: kafka-consumer-hpa
+```
+
+### Función del consumidor
+
+* Consume mensajes desde Kafka.
+* Procesa datos.
+* Escribe métricas agregadas en Valkey.
+
+### Configuración de escalamiento
+
+```yaml
+minReplicas: 1
+maxReplicas: 3
+```
+
+* Es el componente que **más escala**.
+* Más réplicas permiten mayor throughput de consumo.
+
+### Métrica
+
+```yaml
+averageUtilization: 70
+```
+
+* El consumo de Kafka es intensivo en CPU y red.
+* Se permite mayor utilización antes de escalar.
+
+---
+
+## 6. Requisitos para que el HPA funcione
+
+Para que estos HPA funcionen correctamente, es indispensable:
+
+1. **Metrics Server instalado**:
+
+```bash
+kubectl top pods
+```
+
+2. **Requests de CPU definidos**, por ejemplo:
+
+```yaml
+resources:
+  requests:
+    cpu: "10m"
+```
+
+Sin esto, el HPA **no puede calcular porcentajes**.
+
+---
+
+## 7. Impacto en el Rendimiento (Análisis del Proyecto)
+
+| Componente     | Sin HPA                | Con HPA              |
+| -------------- | ---------------------- | -------------------- |
+| Rust API       | Latencia alta en picos | Latencia estable     |
+| Go API         | Saturación rápida      | Escala dinámicamente |
+| gRPC Server    | Cuellos de botella     | Mayor throughput     |
+| Kafka Consumer | Lag en Kafka           | Consumo paralelo     |
+| Valkey         | Lecturas estables      | Mejor distribución   |
+
+El HPA permitió:
+
+* Reducir errores HTTP 500.
+* Disminuir latencia promedio.
+* Mejorar el procesamiento de eventos Kafka.
+* Visualizar claramente el impacto en Grafana.
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
